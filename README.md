@@ -1,8 +1,10 @@
-微信第三方平台Node库API，ES6版本,基于https://github.com/node-webot/co-wechat-api 3.3.0版本(ES6版)
+微信第三方平台 Node 库 API，ES6 版本,基于https://github.com/node-webot/co-wechat-api 3.8.2 版本(ES6 版)
+
 ## 功能列表
+
 - 发送客服消息（文本、图片、语音、视频、音乐、图文）
 - 菜单操作（查询、创建、删除、个性化菜单）
-- 二维码（创建临时、永久二维码，查看二维码URL）
+- 二维码（创建临时、永久二维码，查看二维码 URL）
 - 分组操作（查询、创建、修改、移动用户到分组）
 - 用户信息（查询用户基本信息、获取关注者列表）
 - 媒体文件（上传、获取）
@@ -15,17 +17,14 @@
 - 网址缩短
 - 语义查询
 - 数据分析
-- JSSDK服务端支持
+- JSSDK 服务端支持
 - 素材管理
 - 摇一摇周边
-
 
 ## Installation
 
 ```sh
-$ npm install co-wechat-open-api
-// or
-$ npm install https://github.com/liwenyue/co-wechat-open-api.git
+$ npm install https://github.com/ZyqGitHub1/co-wechat-open-api.git
 ```
 
 ## Usage
@@ -40,29 +39,43 @@ async function() {
 ```
 
 ### 多进程
-当多进程时，当多进程时，component token和access token需要全局维护，以下为保存component token和access token的接口。：
+
+当多进程时，当多进程时，component token 和 access token 需要全局维护，以下为保存 component token 和 access token 的接口。：
 
 ```js
-var api = new API('component_appid', 'component_appsecret', 'authorizer_appid', 'authorizer_refresh_token', 'component_verify_ticket', async function () {
-   // 传入一个获取全局component_token的方法
-   var txt = await fs.readFile('component_token.txt', 'utf8');
-   return JSON.parse(txt);
- }, async function (component_token) {
-   // 请将component_token存储到全局，跨进程、跨机器级别的全局，比如写到数据库、redis等
-   // 这样才能在cluster模式及多机情况下使用，以下为写入到文件的示例
-   await fs.writeFile('component_token.txt', JSON.stringify(component_token));
- }, async function () {
-   // 传入一个获取全局token的方法
-   var txt = await fs.readFile('appid_token.txt', 'utf8');
-   return JSON.parse(txt);
- }, async function (token) {
-  // 请将token存储到全局，跨进程、跨机器级别的全局，比如写到数据库、redis等
-  // 这样才能在cluster模式及多机情况下使用，以下为写入到文件的示例
-   await fs.writeFile('appid_token.txt', JSON.stringify(token));
- });
+var api = new API(
+  'component_appid',
+  'component_appsecret',
+  'authorizer_appid',
+  'authorizer_refresh_token',
+  'component_verify_ticket',
+  async function() {
+    // 传入一个获取全局component_token的方法
+    var txt = await fs.readFile('component_token.txt', 'utf8');
+    return JSON.parse(txt);
+  },
+  async function(component_token) {
+    // 请将component_token存储到全局，跨进程、跨机器级别的全局，比如写到数据库、redis等
+    // 这样才能在cluster模式及多机情况下使用，以下为写入到文件的示例
+    await fs.writeFile('component_token.txt', JSON.stringify(component_token));
+  },
+  async function() {
+    // 传入一个获取全局token的方法
+    var txt = await fs.readFile('appid_token.txt', 'utf8');
+    return JSON.parse(txt);
+  },
+  async function(token) {
+    // 请将token存储到全局，跨进程、跨机器级别的全局，比如写到数据库、redis等
+    // 这样才能在cluster模式及多机情况下使用，以下为写入到文件的示例
+    await fs.writeFile('appid_token.txt', JSON.stringify(token));
+  }
+);
 ```
 
-## 详细API
-原始API文档请参见：[消息接口指南](http://mp.weixin.qq.com/wiki/index.php?title=消息接口指南)。
+## 详细 API
+
+原始 API 文档请参见：[消息接口指南](http://mp.weixin.qq.com/wiki/index.php?title=消息接口指南)。
+
 ## License
+
 The MIT license.
