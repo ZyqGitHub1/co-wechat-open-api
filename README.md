@@ -117,6 +117,8 @@ const wechatOpenApi = new API({
 
 原始 API 文档请参见：[消息接口指南](http://mp.weixin.qq.com/wiki/index.php?title=消息接口指南)。
 
+更多内容请移步至[github](https://github.com/ZyqGitHub1/co-wechat-open-api.git)
+
 ## License
 
 The MIT license.
