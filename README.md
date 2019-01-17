@@ -1,7 +1,6 @@
-微信第三方平台 Node 库 API，ES6 版本,基于https://github.com/node-webot/co-wechat-api 3.8.2 版本(ES6 版)
+微信第三方平台 Node 库 API，ES6 版本，基于[co-wechat-api](https://github.com/node-webot/co-wechat-api) 3.8.2 版本(ES6 版)和[co-wechat-open-api](https://github.com/liwenyue/co-wechat-open-api)2.0.6(ES6 版)
 
 ## 功能列表
-
 - 发送客服消息（文本、图片、语音、视频、音乐、图文）
 - 菜单操作（查询、创建、删除、个性化菜单）
 - 二维码（创建临时、永久二维码，查看二维码 URL）
@@ -24,52 +23,94 @@
 ## Installation
 
 ```sh
+$ npm install es-wechat-open-api
+or
 $ npm install https://github.com/ZyqGitHub1/co-wechat-open-api.git
 ```
 
 ## Usage
 
-```js
-var OpenWechatAPI = require('co-wechat-open-api');
+### 网络请求处理
 
-async function() {
-  var api = new OpenWechatAPI('component_appid', 'component_appsecret', 'authorizer_appid', 'authorizer_refresh_token', 'componentVerifyTicket');
-  var result = await api.updateRemark('open_id', 'remarked');
-}
+```javascript
+// TODO:
+// 1.将微信定时推送的componentTicket存储在redis之中
+// 示例代码如下
+componentTicketRequest => {
+  await this.redis.set(
+    'componentTicket',
+    componentTicketRequest.componentVerifyTicket
+  );
+};
+
+// 2.在授权成功的回调处理部分将授权方的accessToken和refreshToken存储在redis之中
+// 示例代码如下
+authorizerCallbackRequest => {
+  const authorizerAppId =
+    authorizerCallbackRequest.authorization_info.authorizer_appid;
+  const accessToken =
+    authorizationInfo.authorizerCallbackResponse.authorizer_access_token;
+  const expiresIn = authorizerCallbackRequest.authorization_info.expires_in;
+  const refreshToken =
+    authorizerCallbackRequest.authorization_info.authorizer_refresh_token;
+  const accessTokenInstance = {
+    accessToken,
+    expireTime: new Date().getTime() + (expiresIn - 20) * 1000
+  };
+  await redis.set(
+    `authorizerAppToken:${authorizerAppId}`,
+    JSON.stringify({ accessTokenInstance, refreshToken })
+  );
+};
+
 ```
 
-### 多进程
-
-当多进程时，当多进程时，component token 和 access token 需要全局维护，以下为保存 component token 和 access token 的接口。：
+### 调用第三方平台api
 
 ```js
-var api = new API(
-  'component_appid',
-  'component_appsecret',
-  'authorizer_appid',
-  'authorizer_refresh_token',
-  'component_verify_ticket',
-  async function() {
-    // 传入一个获取全局component_token的方法
-    var txt = await fs.readFile('component_token.txt', 'utf8');
-    return JSON.parse(txt);
+// IMPORT:
+// 必须在保证redis数据库中已经存在网络请求处理部分获取到的
+// componentTicket，accessTokenInstance，refreshToken
+const { ComponentAPI, API } = require('co-wechat-open-api');
+const Redis = require('ioredis');
+const redis = new Redis();
+
+const componentAPI = new ComponentAPI({
+  componentAppId: 'componentAppId',
+  componentAppSecret: 'componentAppSecret',
+  getComponentTicket: async () => {
+    const ticket = await this.redis.get('componentTicket');
+    return ticket;
   },
-  async function(component_token) {
-    // 请将component_token存储到全局，跨进程、跨机器级别的全局，比如写到数据库、redis等
-    // 这样才能在cluster模式及多机情况下使用，以下为写入到文件的示例
-    await fs.writeFile('component_token.txt', JSON.stringify(component_token));
+  getComponentToken: async () => {
+    const ticket = await this.redis.get('componentToken');
+    return ticket;
   },
-  async function() {
-    // 传入一个获取全局token的方法
-    var txt = await fs.readFile('appid_token.txt', 'utf8');
-    return JSON.parse(txt);
-  },
-  async function(token) {
-    // 请将token存储到全局，跨进程、跨机器级别的全局，比如写到数据库、redis等
-    // 这样才能在cluster模式及多机情况下使用，以下为写入到文件的示例
-    await fs.writeFile('appid_token.txt', JSON.stringify(token));
+  saveComponentToken: async componentToken => {
+    await this.redis.set('componentToken', JSON.stringify(componentToken));
   }
-);
+});
+
+
+const wechatOpenApi = new API({
+  componentApi: componentAPI,
+  authorizerAppId: 'authorizerAppId',
+  getToken: async () => {
+    const tokens = await redis.get('authorizerAppToken:authorizerAppId');
+    return JSON.parse(tokens);
+  },
+  saveToken: async () => {
+    await redis.set(
+      'authorizerAppToken:authorizerAppId',
+      JSON.stringify({ accessToken, refreshToken })
+    );
+  }
+});
+
+(async () => {
+  const menuConfig = await wechatOpenApi.getMenuConfig();
+  console.log(menuConfig);
+})();
 ```
 
 ## 详细 API
